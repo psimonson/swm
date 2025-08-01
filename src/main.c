@@ -10,6 +10,7 @@
 #include "util.h"
 #include "lscreen.h"
 #include "status.h"
+#include "rundlg.h"
 
 #define MAX_WINDOWS 256
 #define MAX_MINIMIZED 64
@@ -42,6 +43,7 @@ Window hidden_windows[MAX_HIDDEN];
 Window minimized_windows[MAX_MINIMIZED];
 int minimized_count = 0;
 int hidden_count = 0;
+int running = 1;
 
 // EWMH atoms
 Atom net_supported, net_client_list, net_active_window, net_wm_name;
@@ -443,6 +445,17 @@ void handle_keypress(XKeyEvent *e) {
     else if ((e->state & Mod1Mask) && key == XK_F4) {
         close_window();
     }
+    // Super+Q (quit window manager)
+    else if ((e->state & Mod4Mask) && key == XK_q) {
+        running = 0;
+    }
+    // Super+D (run dialog)
+    else if ((e->state & Mod4Mask) && key == XK_d) {
+        if (rundlg_init(dpy, screen)) {
+            rundlg_show();
+            rundlg_free();
+        }
+    }
     // Super+N (minimize)
     else if ((e->state & Mod4Mask) && key == XK_n) {
         minimize_window();
@@ -643,6 +656,8 @@ int main() {
              GrabModeAsync, GrabModeAsync);
     XGrabKey(dpy, XKeysymToKeycode(dpy, XK_F4), Mod1Mask, root, True,
              GrabModeAsync, GrabModeAsync);
+    XGrabKey(dpy, XKeysymToKeycode(dpy, XK_d), Mod4Mask, root, True,
+             GrabModeAsync, GrabModeAsync);
     XGrabKey(dpy, XKeysymToKeycode(dpy, XK_n), Mod4Mask, root, True,
              GrabModeAsync, GrabModeAsync);
     XGrabKey(dpy, XKeysymToKeycode(dpy, XK_l), Mod4Mask, root, True,
@@ -660,6 +675,8 @@ int main() {
     printf("Shortcuts:\n");
     printf("  Alt+Tab: Switch windows\n");
     printf("  Alt+F4: Close window\n");
+    printf("  Super+Q: Quit window manager\n");
+    printf("  Super+D: Run dialog\n");
     printf("  Super+N: Minimize window\n");
     printf("  Super+L: Lock screen\n");
     printf("  Super+M: Maximize/restore window\n");
@@ -675,7 +692,7 @@ int main() {
 
     // Main event loop
     XEvent e;
-    while (1) {
+    while (running) {
         XNextEvent(dpy, &e);
         
         switch (e.type) {

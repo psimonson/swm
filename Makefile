@@ -6,7 +6,7 @@ SRCDIR = $(shell basename $(shell pwd))
 DESTDIR ?= 
 PREFIX ?= /usr
 
-SRC0 =  src/main.c src/lscreen.c src/util.c src/status.c
+SRC0 =  src/main.c src/lscreen.c src/util.c src/status.c src/rundlg.c
 OBJ0 = $(SRC0:%.c=%.c.o)
 EXE0 = swm
 
